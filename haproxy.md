@@ -50,13 +50,13 @@ defaults
         log-format %ci:%cp\ [%t]\ %ft\ %b/%s\ %Tq/%Tw/%Tc/%Tr/%Tt\ %ST\ %B\ %CC\ %CS\ %tsc\ %ac/%fc/%bc/%sc/%rc\ %sq/%bq\ %hrl\ %hsl\ %{+Q}r\ %sslc
 
 frontend www-http
-        bind 104.236.137.237:80
+        bind ip_here:80
         reqadd X-Forwarded-Proto:\ http
         default_backend nodes
 
 
 frontend www-https
-        bind 104.236.137.237:443 ssl crt /etc/haproxy/certs/ph1.ca.pem
+        bind ip_here:443 ssl crt /etc/haproxy/certs/example.com.pem
         reqadd X-Forwarded-Proto:\ https
         acl letsencrypt-acl path_beg /.well-known/acme-challenge/
         use_backend letsencrypt-backend if letsencrypt-acl
@@ -66,11 +66,12 @@ backend nodes
         redirect scheme https if !{ ssl_fc }
         balance roundrobin
         option forwardfor
+	http-response set-header Strict-Transport-Security "max-age=16000000; includeSubDomains; preload;"
         http-request set-header X-Forwarded-Port %[dst_port]
         http-request add-header X-Forwarded-Proto https if { ssl_fc }
         option httpchk HEAD / HTTP/1.1\r\nHost:localhost
         ### servers ###
-        server web01 127.0.0.1:5000 check
+        server web01 127.0.0.1:port_here check
 
 backend letsencrypt-backend
    server letsencrypt 127.0.0.1:54321
